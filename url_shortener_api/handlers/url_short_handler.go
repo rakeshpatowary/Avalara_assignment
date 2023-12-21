@@ -20,6 +20,17 @@ type URLShortenResponse struct {
 
 // URLShortener is the http handler to short any valid URL
 func URLShortener(rw http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPut {
+		urlSortener(rw, r)
+		return
+	}
+
+	// Catch all
+	rw.WriteHeader(http.StatusMethodNotAllowed)
+}
+
+// urlSortener generates short URL for valid input URL
+func urlSortener(rw http.ResponseWriter, r *http.Request) {
 	var usReq URLShortenRequest
 
 	err := json.NewDecoder(r.Body).Decode(&usReq)
@@ -33,7 +44,7 @@ func URLShortener(rw http.ResponseWriter, r *http.Request) {
 	// Map the input URL to the generated short key
 	URLMap[shortKey] = usReq.Destination
 
-	shortURL := fmt.Sprintf("http://avalaraDomain.com/%s", shortKey)
+	shortURL := fmt.Sprintf("http://avalara-domain.com/%s", shortKey)
 
 	response := URLShortenResponse{
 		ShortURL: shortURL,
@@ -43,7 +54,7 @@ func URLShortener(rw http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(rw).Encode(response)
 }
 
-// generateShortKey returns a valid slice of string of length keyLength
+// generateShortKey returns a slice of string of length keyLength
 func generateShortKey(keyLength int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
