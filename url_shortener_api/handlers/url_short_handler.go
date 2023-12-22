@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -38,6 +39,11 @@ func urlSortener(rw http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&usReq)
 	if err != nil {
 		http.Error(rw, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	if !strings.HasPrefix((string)(usReq.Destination), "http") {
+		http.Error(rw, "Not a valid URL ", http.StatusBadRequest)
 		return
 	}
 
