@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var URLMap = make(map[string]string)
@@ -52,6 +54,22 @@ func urlSortener(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(rw).Encode(response)
+}
+
+// RedirectToOriginalURL redirects to original URl based on the shortKey
+func RedirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
+	varMap := mux.Vars(r)
+
+	fmt.Println("varMap: ", varMap)
+	shortKey := varMap["shortKey"]
+
+	originalURL, exists := URLMap[shortKey]
+	if !exists {
+		http.NotFound(w, r)
+		return
+	}
+
+	http.Redirect(w, r, originalURL, http.StatusMovedPermanently)
 }
 
 // generateShortKey returns a slice of string of length keyLength

@@ -17,6 +17,7 @@ func main() {
 	sm := mux.NewRouter()
 
 	sm.HandleFunc("/shortURL", handlers.URLShortener).Methods("PUT")
+	sm.HandleFunc("/{shortKey}", handlers.RedirectToOriginalURL).Methods("GET")
 
 	http.Handle("/", sm)
 
