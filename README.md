@@ -18,7 +18,9 @@ This URL shortener provides a RESTful API endpoint to shorten any valid URLs. It
   "destination": "https://www.google.com"
 }
 
-Response:
+```
+
+- **Response:**
     - Status Code: `200 OK`
     - Body: JSON object with a short_url field representing the shortened URL
 
@@ -27,6 +29,8 @@ Response:
   "short_url": "http://avalara-domain.com/JhLLu"
 }
 
+```
+
 ### Redirect to Original URL
 
 - **Endpoint:** `GET /{shortKey}`
@@ -34,7 +38,7 @@ Response:
   - Method: `GET`
   - Path: The short key generated during URL shortening
 
-Response:
+- **Response:**
     - Redirect to the original URL if the short key is valid. Otherwise, a 404 Not Found response.
 
 ## Usage
