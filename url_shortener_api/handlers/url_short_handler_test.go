@@ -29,6 +29,23 @@ var SuccessfulShortenTests = []struct {
 	},
 }
 
+var FailureShortenTests = []struct {
+	name      string
+	jsonBody  string
+	wantEqual int
+}{
+	{
+		"Invalid JSON Format",
+		"\"invalid_key\": \"invalid_value\"}",
+		http.StatusBadRequest,
+	},
+	{
+		"Invalid input URL",
+		"\"destination\": \"invalid_value\"}",
+		http.StatusBadRequest,
+	},
+}
+
 func TestURLShortener(t *testing.T) {
 	for _, test := range SuccessfulShortenTests {
 		router := mux.NewRouter()
@@ -71,24 +88,26 @@ func TestURLShortener(t *testing.T) {
 	}
 
 	// Not succesful scenario: [Invalid JSON format in request body]
-	t.Run("Invalid JSON Format", func(t *testing.T) {
-		reqBody := bytes.NewBufferString(`{"invalid_key": "invalid_value"}`)
-		req, err := http.NewRequest("PUT", "/shortURL", reqBody)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for _, test := range FailureShortenTests {
+		t.Run(test.name, func(t *testing.T) {
+			reqBody := bytes.NewBufferString(test.jsonBody)
+			req, err := http.NewRequest("PUT", "/shortURL", reqBody)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		// Create a ResponseRecorder to record the response
-		rec := httptest.NewRecorder()
+			// Create a ResponseRecorder to record the response
+			rec := httptest.NewRecorder()
 
-		// Call the URLShortener function
-		URLShortener(rec, req)
+			// Call the URLShortener function
+			URLShortener(rec, req)
 
-		// Check the response code
-		if rec.Code != http.StatusBadRequest {
-			t.Errorf("Expected status code %v, but got %v", http.StatusBadRequest, rec.Code)
-		}
-	})
+			// Check the response code
+			if rec.Code != test.wantEqual {
+				t.Errorf("Expected status code %v, but got %v", http.StatusBadRequest, rec.Code)
+			}
+		})
+	}
 }
 
 var RedirectOriginalURLTests = []struct {
@@ -131,6 +150,53 @@ func TestRedirectToOriginalURL(t *testing.T) {
 			// Check the status code
 			if rec.Code != http.StatusMovedPermanently {
 				t.Errorf("Expected status code %v, but got %v", http.StatusMovedPermanently, rec.Code)
+			}
+		})
+	}
+}
+
+var generateShortKeyTests = []struct {
+	name       string
+	keyLength  int
+	expectLen  int
+	expectOnly string
+}{
+	{
+		"TestKeyLength5",
+		5,
+		5,
+		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	},
+	{
+		"TestKeyLength10",
+		10,
+		10,
+		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	},
+	{
+		"TestKeyLength15",
+		15,
+		15,
+		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	},
+}
+
+func TestGenerateShortKey(t *testing.T) {
+
+	for _, test := range generateShortKeyTests {
+		t.Run(test.name, func(t *testing.T) {
+			shortKey := generateShortKey(test.keyLength)
+
+			// Check length
+			if len(shortKey) != test.expectLen {
+				t.Errorf("Expected key length %d, but got %d", test.expectLen, len(shortKey))
+			}
+
+			// Check characters
+			for _, char := range shortKey {
+				if !strings.Contains(test.expectOnly, string(char)) {
+					t.Errorf("Unexpected character %s in generated key", string(char))
+				}
 			}
 		})
 	}
